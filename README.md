@@ -1,12 +1,12 @@
-# Crowdcoin Sentinel
+# CRowdCLassic Sentinel
 
-An all-powerful toolset for Crowdcoin.
+An all-powerful toolset for CRowdCLassic.
 
-[![Build Status](https://travis-ci.org/crowdcoinpay/sentinel.svg?branch=master)](https://travis-ci.org/crowdcoinpay/sentinel)
+[![Build Status](https://travis-ci.org/crowdclassicpay/sentinel.svg?branch=master)](https://travis-ci.org/crowdclassicpay/sentinel)
 
-Sentinel is an autonomous agent for persisting, processing and automating Crowdcoin V12.1 governance objects and tasks, and for expanded functions in the upcoming Crowdcoin V13 release (Evolution).
+Sentinel is an autonomous agent for persisting, processing and automating CRowdCLassic V12.1 governance objects and tasks, and for expanded functions in the upcoming CRowdCLassic V13 release (Evolution).
 
-Sentinel is implemented as a Python application that binds to a local version 12.1 crowdcoind instance on each Crowdcoin V12.1 Masternode.
+Sentinel is implemented as a Python application that binds to a local version 12.1 crowdclassicd instance on each CRowdCLassic V12.1 Masternode.
 
 This guide covers installing Sentinel onto an existing 12.1 Masternode in Ubuntu 14.04 / 16.04.
 
@@ -23,21 +23,21 @@ Update system packages and ensure virtualenv is installed:
     $ sudo apt-get update
     $ sudo apt-get -y install python-virtualenv
 
-Make sure the local Crowdcoin daemon running is at least version 12.1 (120100)
+Make sure the local CRowdCLassic daemon running is at least version 12.1 (120100)
 
-    $ crowdcoin-cli getinfo | grep version
+    $ crowdclassic-cli getinfo | grep version
 
 ### 2. Install Sentinel
 
 Clone the Sentinel repo and install Python dependencies.
 
-    $ git clone https://github.com/crowdcoinChain/sentinelLinux.git && cd sentinelLinux
+    $ git clone https://github.com/crowdclassicChain/sentinelLinux.git && cd sentinelLinux
     $ export LC_ALL=C
     $ virtualenv ./venv
     $ ./venv/bin/pip install -r requirements.txt
     
 
-### 2.a. Check crowdcoin.conf
+### 2.a. Check crowdclassic.conf
 
 Change the configuration checking, and appending if missing the following
 parameters rpcuser and rpcpassword needs to be replaced
@@ -75,24 +75,24 @@ Clone the Sentinel repo and install Python dependencies.
 ### 2.b. remove old files
 Enter the wallet folder and stop the wallet
 
-    ./crowdcoin-cli stop 
+    ./crowdclassic-cli stop 
     
-Enter the crowdcoin config folder mentioned during the installation
+Enter the crowdclassic config folder mentioned during the installation
     
     rm mncache.dat
     rm mnpayments.dat
     
 Enter the wallet folder and restart the wallet 
 
-    ./crowdcoind -daemon -reindex
+    ./crowdclassicd -daemon -reindex
     
 Check the sync status
 
-    watch ./crowdcoin-cli mnsync status
+    watch ./crowdclassic-cli mnsync status
 
 As soon as you see the following response press CTRL+C
 
-    ./crowdcoin-cli mnsync status
+    ./crowdclassic-cli mnsync status
     {
     "AssetID": 999,
     "AssetName": "MASTERNODE_SYNC_FINISHED",
@@ -106,7 +106,7 @@ As soon as you see the following response press CTRL+C
 
 Finally start the masternode
 
-    ./crowdcoin-cli masternode start
+    ./crowdclassic-cli masternode start
 
 
 ### 3. Set up Cron
@@ -125,13 +125,13 @@ Test the config by runnings all tests from the sentinel folder you cloned into
 
     $ ./venv/bin/py.test ./test
 
-With all tests passing and crontab setup, Sentinel will stay in sync with crowdcoind and the installation is complete
+With all tests passing and crontab setup, Sentinel will stay in sync with crowdclassicd and the installation is complete
 
 ## Configuration
 
-An alternative (non-default) path to the `crowdcoin.conf` file can be specified in `sentinel.conf`:
+An alternative (non-default) path to the `crowdclassic.conf` file can be specified in `sentinel.conf`:
 
-    crowdcoin_conf=/path/to/crowdcoin.conf
+    crowdclassic_conf=/path/to/crowdclassic.conf
 
 ## Troubleshooting
 
@@ -141,11 +141,11 @@ To view debug output, set the `SENTINEL_DEBUG` environment variable to anything 
 
 ## Contributing
 
-Please follow the [CrowdcoinCore guidelines for contributing](https://github.com/crowdcoinpay/crowdcoin/blob/v0.12.1.x/CONTRIBUTING.md).
+Please follow the [CRowdCLassicCore guidelines for contributing](https://github.com/crowdclassicpay/crowdclassic/blob/v0.12.1.x/CONTRIBUTING.md).
 
 Specifically:
 
-* [Contributor Workflow](https://github.com/crowdcoinpay/crowdcoin/blob/v0.12.1.x/CONTRIBUTING.md#contributor-workflow)
+* [Contributor Workflow](https://github.com/crowdclassicpay/crowdclassic/blob/v0.12.1.x/CONTRIBUTING.md#contributor-workflow)
 
     To contribute a patch, the workflow is as follows:
 
@@ -159,4 +159,4 @@ Specifically:
 
 ### License
 
-Released under the MIT license, under the same terms as CrowdcoinCore itself. See [LICENSE](LICENSE) for more info.
+Released under the MIT license, under the same terms as CRowdCLassicCore itself. See [LICENSE](LICENSE) for more info.

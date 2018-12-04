@@ -12,14 +12,14 @@ from misc import printdbg, epoch2str
 import time
 
 
-def is_valid_crowdcoin_address(address, network='mainnet'):
+def is_valid_crowdclassic_address(address, network='mainnet'):
     # Only public key addresses are allowed
     # A valid address is a RIPEMD-160 hash which contains 20 bytes
     # Prior to base58 encoding 1 version byte is prepended and
     # 4 checksum bytes are appended so the total number of
     # base58 encoded bytes should be 25.  This means the number of characters
     # in the encoding should be about 34 ( 25 * log2( 256 ) / log2( 58 ) ).
-    crowdcoin_version = 140 if network == 'testnet' else 76
+    crowdclassic_version = 140 if network == 'testnet' else 76
 
     # Check length (This is important because the base58 library has problems
     # with long addresses (which are invalid anyway).
@@ -32,10 +32,10 @@ def is_valid_crowdcoin_address(address, network='mainnet'):
         decoded = base58.b58decode_chk(address)
         address_version = ord(decoded[0:1])
     except:
-        # rescue from exception, not a valid Crowdcoin address
+        # rescue from exception, not a valid CRowdCLassic address
         return False
 
-    if (address_version != crowdcoin_version):
+    if (address_version != crowdclassic_version):
         return False
 
     return True
@@ -179,45 +179,45 @@ def create_superblock(proposals, event_block_height, budget_max, sb_epoch_time):
     return sb
 
 
-# shims 'til we can fix the crowdcoind side
-def SHIM_serialise_for_crowdcoind(sentinel_hex):
+# shims 'til we can fix the crowdclassicd side
+def SHIM_serialise_for_crowdclassicd(sentinel_hex):
     from models import CROWDCOIND_GOVOBJ_TYPES
     # unpack
     obj = deserialise(sentinel_hex)
 
-    # shim for crowdcoind
+    # shim for crowdclassicd
     govtype = obj[0]
 
     # add 'type' attribute
     obj[1]['type'] = CROWDCOIND_GOVOBJ_TYPES[govtype]
 
-    # superblock => "trigger" in crowdcoind
+    # superblock => "trigger" in crowdclassicd
     if govtype == 'superblock':
         obj[0] = 'trigger'
 
-    # crowdcoind expects an array (even though there is only a 1:1 relationship between govobj->class)
+    # crowdclassicd expects an array (even though there is only a 1:1 relationship between govobj->class)
     obj = [obj]
 
     # re-pack
-    crowdcoind_hex = serialise(obj)
-    return crowdcoind_hex
+    crowdclassicd_hex = serialise(obj)
+    return crowdclassicd_hex
 
 
-# shims 'til we can fix the crowdcoind side
-def SHIM_deserialise_from_crowdcoind(crowdcoind_hex):
+# shims 'til we can fix the crowdclassicd side
+def SHIM_deserialise_from_crowdclassicd(crowdclassicd_hex):
     from models import CROWDCOIND_GOVOBJ_TYPES
 
     # unpack
-    obj = deserialise(crowdcoind_hex)
+    obj = deserialise(crowdclassicd_hex)
 
-    # shim from crowdcoind
+    # shim from crowdclassicd
     # only one element in the array...
     obj = obj[0]
 
     # extract the govobj type
     govtype = obj[0]
 
-    # superblock => "trigger" in crowdcoind
+    # superblock => "trigger" in crowdclassicd
     if govtype == 'trigger':
         obj[0] = govtype = 'superblock'
 
@@ -251,7 +251,7 @@ def did_we_vote(output):
     err_msg = ''
 
     try:
-        detail = output.get('detail').get('crowdcoin.conf')
+        detail = output.get('detail').get('crowdclassic.conf')
         result = detail.get('result')
         if 'errorMessage' in detail:
             err_msg = detail.get('errorMessage')

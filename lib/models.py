@@ -12,7 +12,7 @@ from peewee import IntegerField, CharField, TextField, ForeignKeyField, DecimalF
 import peewee
 import playhouse.signals
 import misc
-import crowdcoind
+import crowdclassicd
 from misc import (printdbg, is_numeric)
 import config
 from bitcoinrpc.authproxy import JSONRPCException
@@ -72,10 +72,10 @@ class GovernanceObject(BaseModel):
     class Meta:
         db_table = 'governance_objects'
 
-    # sync crowdcoind gobject list with our local relational DB backend
+    # sync crowdclassicd gobject list with our local relational DB backend
     @classmethod
-    def sync(self, crowdcoind):
-        golist = crowdcoind.rpc_command('gobject', 'list')
+    def sync(self, crowdclassicd):
+        golist = crowdclassicd.rpc_command('gobject', 'list')
 
         # objects which are removed from the network should be removed from the DB
         try:
@@ -84,7 +84,7 @@ class GovernanceObject(BaseModel):
                 purged.delete_instance(recursive=True, delete_nullable=True)
 
             for item in golist.values():
-                (go, subobj) = self.import_gobject_from_crowdcoind(crowdcoind, item)
+                (go, subobj) = self.import_gobject_from_crowdclassicd(crowdclassicd, item)
         except Exception as e:
             printdbg("Got an error upon import: %s" % e)
 
@@ -96,9 +96,9 @@ class GovernanceObject(BaseModel):
         return query
 
     @classmethod
-    def import_gobject_from_crowdcoind(self, crowdcoind, rec):
+    def import_gobject_from_crowdclassicd(self, crowdclassicd, rec):
         import decimal
-        import crowdcoinlib
+        import crowdclassiclib
         import inflection
 
         object_hex = rec['DataHex']
@@ -113,9 +113,9 @@ class GovernanceObject(BaseModel):
             'no_count': rec['NoCount'],
         }
 
-        # shim/crowdcoind conversion
-        object_hex = crowdcoinlib.SHIM_deserialise_from_crowdcoind(object_hex)
-        objects = crowdcoinlib.deserialise(object_hex)
+        # shim/crowdclassicd conversion
+        object_hex = crowdclassiclib.SHIM_deserialise_from_crowdclassicd(object_hex)
+        objects = crowdclassiclib.deserialise(object_hex)
         subobj = None
 
         obj_type, dikt = objects[0:2:1]
@@ -125,11 +125,11 @@ class GovernanceObject(BaseModel):
         # set object_type in govobj table
         gobj_dict['object_type'] = subclass.govobj_type
 
-        # exclude any invalid model data from crowdcoind...
+        # exclude any invalid model data from crowdclassicd...
         valid_keys = subclass.serialisable_fields()
         subdikt = {k: dikt[k] for k in valid_keys if k in dikt}
 
-        # get/create, then sync vote counts from crowdcoind, with every run
+        # get/create, then sync vote counts from crowdclassicd, with every run
         govobj, created = self.get_or_create(object_hash=object_hash, defaults=gobj_dict)
         if created:
             printdbg("govobj created = %s" % created)
@@ -138,19 +138,19 @@ class GovernanceObject(BaseModel):
             printdbg("govobj updated = %d" % count)
         subdikt['governance_object'] = govobj
 
-        # get/create, then sync payment amounts, etc. from crowdcoind - Crowdcoind is the master
+        # get/create, then sync payment amounts, etc. from crowdclassicd - CRowdCLassicd is the master
         try:
             newdikt = subdikt.copy()
             newdikt['object_hash'] = object_hash
             if subclass(**newdikt).is_valid() is False:
-                govobj.vote_delete(crowdcoind)
+                govobj.vote_delete(crowdclassicd)
                 return (govobj, None)
 
             subobj, created = subclass.get_or_create(object_hash=object_hash, defaults=subdikt)
         except Exception as e:
             # in this case, vote as delete, and log the vote in the DB
-            printdbg("Got invalid object from crowdcoind! %s" % e)
-            govobj.vote_delete(crowdcoind)
+            printdbg("Got invalid object from crowdclassicd! %s" % e)
+            govobj.vote_delete(crowdclassicd)
             return (govobj, None)
 
         if created:
@@ -162,9 +162,9 @@ class GovernanceObject(BaseModel):
         # ATM, returns a tuple w/gov attributes and the govobj
         return (govobj, subobj)
 
-    def vote_delete(self, crowdcoind):
+    def vote_delete(self, crowdclassicd):
         if not self.voted_on(signal=VoteSignals.delete, outcome=VoteOutcomes.yes):
-            self.vote(crowdcoind, VoteSignals.delete, VoteOutcomes.yes)
+            self.vote(crowdclassicd, VoteSignals.delete, VoteOutcomes.yes)
         return
 
     def get_vote_command(self, signal, outcome):
@@ -172,8 +172,8 @@ class GovernanceObject(BaseModel):
                signal.name, outcome.name]
         return cmd
 
-    def vote(self, crowdcoind, signal, outcome):
-        import crowdcoinlib
+    def vote(self, crowdclassicd, signal, outcome):
+        import crowdclassiclib
 
         # At this point, will probably never reach here. But doesn't hurt to
         # have an extra check just in case objects get out of sync (people will
@@ -203,10 +203,10 @@ class GovernanceObject(BaseModel):
 
         vote_command = self.get_vote_command(signal, outcome)
         printdbg(' '.join(vote_command))
-        output = crowdcoind.rpc_command(*vote_command)
+        output = crowdclassicd.rpc_command(*vote_command)
 
         # extract vote output parsing to external lib
-        voted = crowdcoinlib.did_we_vote(output)
+        voted = crowdclassiclib.did_we_vote(output)
 
         if voted:
             printdbg('VOTE success, saving Vote object to database')
@@ -214,11 +214,11 @@ class GovernanceObject(BaseModel):
                  object_hash=self.object_hash).save()
         else:
             printdbg('VOTE failed, trying to sync with network vote')
-            self.sync_network_vote(crowdcoind, signal)
+            self.sync_network_vote(crowdclassicd, signal)
 
-    def sync_network_vote(self, crowdcoind, signal):
+    def sync_network_vote(self, crowdclassicd, signal):
         printdbg('\tsyncing network vote for object %s with signal %s' % (self.object_hash, signal.name))
-        vote_info = crowdcoind.get_my_gobject_votes(self.object_hash)
+        vote_info = crowdclassicd.get_my_gobject_votes(self.object_hash)
         for vdikt in vote_info:
             if vdikt['signal'] != signal.name:
                 continue
@@ -274,7 +274,7 @@ class Proposal(GovernanceClass, BaseModel):
         db_table = 'proposals'
 
     def is_valid(self):
-        import crowdcoinlib
+        import crowdclassiclib
 
         printdbg("In Proposal#is_valid, for Proposal: %s" % self.__dict__)
 
@@ -304,9 +304,9 @@ class Proposal(GovernanceClass, BaseModel):
                 printdbg("\tProposal amount [%s] is negative or zero, returning False" % self.payment_amount)
                 return False
 
-            # payment address is valid base58 crowdcoin addr, non-multisig
-            if not crowdcoinlib.is_valid_crowdcoin_address(self.payment_address, config.network):
-                printdbg("\tPayment address [%s] not a valid Crowdcoin address for network [%s], returning False" % (self.payment_address, config.network))
+            # payment address is valid base58 crowdclassic addr, non-multisig
+            if not crowdclassiclib.is_valid_crowdclassic_address(self.payment_address, config.network):
+                printdbg("\tPayment address [%s] not a valid CRowdCLassic address for network [%s], returning False" % (self.payment_address, config.network))
                 return False
 
             # URL
@@ -329,7 +329,7 @@ class Proposal(GovernanceClass, BaseModel):
 
     def is_expired(self, superblockcycle=None):
         from constants import SUPERBLOCK_FUDGE_WINDOW
-        import crowdcoinlib
+        import crowdclassiclib
 
         if not superblockcycle:
             raise Exception("Required field superblockcycle missing.")
@@ -341,7 +341,7 @@ class Proposal(GovernanceClass, BaseModel):
         # half the SB cycle, converted to seconds
         # add the fudge_window in seconds, defined elsewhere in Sentinel
         expiration_window_seconds = int(
-            (crowdcoinlib.blocks_to_seconds(superblockcycle) / 2) +
+            (crowdclassiclib.blocks_to_seconds(superblockcycle) / 2) +
             SUPERBLOCK_FUDGE_WINDOW
         )
         printdbg("\texpiration_window_seconds = %s" % expiration_window_seconds)
@@ -364,7 +364,7 @@ class Proposal(GovernanceClass, BaseModel):
         if (self.end_epoch < (misc.now() - thirty_days)):
             return True
 
-        # TBD (item moved to external storage/CrowdcoinDrive, etc.)
+        # TBD (item moved to external storage/CRowdCLassicDrive, etc.)
         return False
 
     @classmethod
@@ -409,17 +409,17 @@ class Proposal(GovernanceClass, BaseModel):
             return rank
 
     def get_prepare_command(self):
-        import crowdcoinlib
-        obj_data = crowdcoinlib.SHIM_serialise_for_crowdcoind(self.serialise())
+        import crowdclassiclib
+        obj_data = crowdclassiclib.SHIM_serialise_for_crowdclassicd(self.serialise())
 
         # new superblocks won't have parent_hash, revision, etc...
         cmd = ['gobject', 'prepare', '0', '1', str(int(time.time())), obj_data]
 
         return cmd
 
-    def prepare(self, crowdcoind):
+    def prepare(self, crowdclassicd):
         try:
-            object_hash = crowdcoind.rpc_command(*self.get_prepare_command())
+            object_hash = crowdclassicd.rpc_command(*self.get_prepare_command())
             printdbg("Submitted: [%s]" % object_hash)
             self.go.object_fee_tx = object_hash
             self.go.save()
@@ -447,7 +447,7 @@ class Superblock(BaseModel, GovernanceClass):
         db_table = 'superblocks'
 
     def is_valid(self):
-        import crowdcoinlib
+        import crowdclassiclib
         import decimal
 
         printdbg("In Superblock#is_valid, for SB: %s" % self.__dict__)
@@ -455,7 +455,7 @@ class Superblock(BaseModel, GovernanceClass):
         # it's a string from the DB...
         addresses = self.payment_addresses.split('|')
         for addr in addresses:
-            if not crowdcoinlib.is_valid_crowdcoin_address(addr, config.network):
+            if not crowdclassiclib.is_valid_crowdclassic_address(addr, config.network):
                 printdbg("\tInvalid address [%s], returning False" % addr)
                 return False
 
@@ -489,12 +489,12 @@ class Superblock(BaseModel, GovernanceClass):
 
     def is_deletable(self):
         # end_date < (current_date - 30 days)
-        # TBD (item moved to external storage/CrowdcoinDrive, etc.)
+        # TBD (item moved to external storage/CRowdCLassicDrive, etc.)
         pass
 
     def hash(self):
-        import crowdcoinlib
-        return crowdcoinlib.hashit(self.serialise())
+        import crowdclassiclib
+        return crowdclassiclib.hashit(self.serialise())
 
     def hex_hash(self):
         return "%x" % self.hash()
@@ -604,33 +604,33 @@ class Watchdog(BaseModel, GovernanceClass):
     only_masternode_can_submit = True
 
     @classmethod
-    def active(self, crowdcoind):
+    def active(self, crowdclassicd):
         now = int(time.time())
         resultset = self.select().where(
-            self.created_at >= (now - crowdcoind.SENTINEL_WATCHDOG_MAX_SECONDS)
+            self.created_at >= (now - crowdclassicd.SENTINEL_WATCHDOG_MAX_SECONDS)
         )
         return resultset
 
     @classmethod
-    def expired(self, crowdcoind):
+    def expired(self, crowdclassicd):
         now = int(time.time())
         resultset = self.select().where(
-            self.created_at < (now - crowdcoind.SENTINEL_WATCHDOG_MAX_SECONDS)
+            self.created_at < (now - crowdclassicd.SENTINEL_WATCHDOG_MAX_SECONDS)
         )
         return resultset
 
-    def is_expired(self, crowdcoind):
+    def is_expired(self, crowdclassicd):
         now = int(time.time())
-        return (self.created_at < (now - crowdcoind.SENTINEL_WATCHDOG_MAX_SECONDS))
+        return (self.created_at < (now - crowdclassicd.SENTINEL_WATCHDOG_MAX_SECONDS))
 
-    def is_valid(self, crowdcoind):
-        if self.is_expired(crowdcoind):
+    def is_valid(self, crowdclassicd):
+        if self.is_expired(crowdclassicd):
             return False
 
         return True
 
-    def is_deletable(self, crowdcoind):
-        if self.is_expired(crowdcoind):
+    def is_deletable(self, crowdclassicd):
+        if self.is_expired(crowdclassicd):
             return True
 
         return False

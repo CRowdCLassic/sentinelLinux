@@ -57,23 +57,23 @@ def is_database_correctly_configured():
     return configured
 
 
-def has_crowdcoin_conf():
+def has_crowdclassic_conf():
     import config
     import io
 
-    valid_crowdcoin_conf = False
+    valid_crowdclassic_conf = False
 
-    # ensure crowdcoin_conf exists & readable
+    # ensure crowdclassic_conf exists & readable
     #
-    # if not, print a message stating that Crowdcoin Core must be installed and
-    # configured, including JSONRPC access in crowdcoin.conf
+    # if not, print a message stating that CRowdCLassic Core must be installed and
+    # configured, including JSONRPC access in crowdclassic.conf
     try:
-        f = io.open(config.crowdcoin_conf)
-        valid_crowdcoin_conf = True
+        f = io.open(config.crowdclassic_conf)
+        valid_crowdclassic_conf = True
     except IOError as e:
         print(e)
 
-    return valid_crowdcoin_conf
+    return valid_crowdclassic_conf
 
 
 # === begin main
@@ -95,8 +95,8 @@ def main():
         print("Please ensure correct database configuration.")
         sys.exit(1)
 
-    if not has_crowdcoin_conf():
-        print("CrowdcoinCore must be installed and configured, including JSONRPC access in crowdcoin.conf")
+    if not has_crowdclassic_conf():
+        print("CRowdCLassicCore must be installed and configured, including JSONRPC access in crowdclassic.conf")
         sys.exit(1)
 
 

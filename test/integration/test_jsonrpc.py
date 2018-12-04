@@ -8,12 +8,12 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'lib'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 import config
 
-from crowdcoind import CrowdcoinDaemon
-from crowdcoin_config import CrowdcoinConfig
+from crowdclassicd import CRowdCLassicDaemon
+from crowdclassic_config import CRowdCLassicConfig
 
 
-def test_crowdcoind():
-    config_text = CrowdcoinConfig.slurp_config_file(config.crowdcoin_conf)
+def test_crowdclassicd():
+    config_text = CRowdCLassicConfig.slurp_config_file(config.crowdclassic_conf)
     network = 'mainnet'
     is_testnet = False
     genesis_hash = u'000007db550074c6535ce41c2a6043d0afbc86f17f1762b06e2cd65d100f7b5f'
@@ -23,15 +23,15 @@ def test_crowdcoind():
             is_testnet = True
             genesis_hash = u'00000a8d0db898c786060f839e63529700bd00e4708b028206a8a60f391566d8'
 
-    creds = CrowdcoinConfig.get_rpc_creds(config_text, network)
-    crowdcoind = CrowdcoinDaemon(**creds)
-    assert crowdcoind.rpc_command is not None
+    creds = CRowdCLassicConfig.get_rpc_creds(config_text, network)
+    crowdclassicd = CRowdCLassicDaemon(**creds)
+    assert crowdclassicd.rpc_command is not None
 
-    assert hasattr(crowdcoind, 'rpc_connection')
+    assert hasattr(crowdclassicd, 'rpc_connection')
 
-    # Crowdcoin testnet block 0 hash == 00000bafbc94add76cb75e2ec92894837288a481e5c005f6563d91623bf8bc2c
+    # CRowdCLassic testnet block 0 hash == 00000bafbc94add76cb75e2ec92894837288a481e5c005f6563d91623bf8bc2c
     # test commands without arguments
-    info = crowdcoind.rpc_command('getinfo')
+    info = crowdclassicd.rpc_command('getinfo')
     info_keys = [
         'blocks',
         'connections',
@@ -48,4 +48,4 @@ def test_crowdcoind():
     assert info['testnet'] is is_testnet
 
     # test commands with args
-    assert crowdcoind.rpc_command('getblockhash', 0) == genesis_hash
+    assert crowdclassicd.rpc_command('getblockhash', 0) == genesis_hash
