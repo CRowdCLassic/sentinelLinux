@@ -2,7 +2,7 @@
 
 An all-powerful toolset for CRowdCLassic.
 
-[![Build Status](https://travis-ci.org/crowdclassicpay/sentinel.svg?branch=master)](https://travis-ci.org/crowdclassicpay/sentinel)
+[![Build Status](https://travis-ci.org/crowdclassiccore/sentinel.svg?branch=master)](https://travis-ci.org/crowdclassiccore/sentinel)
 
 Sentinel is an autonomous agent for persisting, processing and automating CRowdCLassic V12.1 governance objects and tasks, and for expanded functions in the upcoming CRowdCLassic V13 release (Evolution).
 
@@ -31,7 +31,7 @@ Make sure the local CRowdCLassic daemon running is at least version 12.1 (120100
 
 Clone the Sentinel repo and install Python dependencies.
 
-    $ git clone https://github.com/crowdclassicChain/sentinelLinux.git && cd sentinelLinux
+    $ git clone https://github.com/CRowdCLassic/sentinelLinux.git && cd sentinelLinux
     $ export LC_ALL=C
     $ virtualenv ./venv
     $ ./venv/bin/pip install -r requirements.txt
@@ -141,11 +141,11 @@ To view debug output, set the `SENTINEL_DEBUG` environment variable to anything 
 
 ## Contributing
 
-Please follow the [CRowdCLassicCore guidelines for contributing](https://github.com/crowdclassicpay/crowdclassic/blob/v0.12.1.x/CONTRIBUTING.md).
+Please follow the [CRowdCLassicCore guidelines for contributing](https://github.com/CRowdCLassic/crowdclassic-core/blob/v0.12.1.x/CONTRIBUTING.md).
 
 Specifically:
 
-* [Contributor Workflow](https://github.com/crowdclassicpay/crowdclassic/blob/v0.12.1.x/CONTRIBUTING.md#contributor-workflow)
+* [Contributor Workflow](https://github.com/CRowdCLassic/crowdclassic-core/blob/v0.12.1.x/CONTRIBUTING.md#contributor-workflow)
 
     To contribute a patch, the workflow is as follows:
 
